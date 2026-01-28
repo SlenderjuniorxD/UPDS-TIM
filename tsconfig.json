@@ -3,6 +3,7 @@
 {
   "compileOnSave": false,
   "compilerOptions": {
+    "baseUrl": "./", 
     "strict": true,
     "noImplicitOverride": true,
     "noPropertyAccessFromIndexSignature": true,
@@ -13,7 +14,15 @@
     "experimentalDecorators": true,
     "importHelpers": true,
     "target": "ES2022",
-    "module": "preserve"
+    "module": "preserve",
+
+    "paths": {
+      "canvas": [ "src/types/canvas.d.ts" ],
+      "fs": [ "src/types/canvas.d.ts" ],
+      "http": [ "src/types/canvas.d.ts" ],
+      "https": [ "src/types/canvas.d.ts" ],
+      "url": [ "src/types/canvas.d.ts" ]
+    }
   },
   "angularCompilerOptions": {
     "enableI18nLegacyMessageIdFormat": false,

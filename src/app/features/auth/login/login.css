@@ -1,0 +1,11 @@
+/* login.css */
+:host {
+  display: block;
+}
+
+/* Opcional: Si quieres un fondo con patrón sutil en lugar de gris plano */
+.bg-pattern {
+  background-color: #f9fafb;
+  background-image: radial-gradient(#227ffd 0.5px, transparent 0.5px);
+  background-size: 10px 10px;
+}

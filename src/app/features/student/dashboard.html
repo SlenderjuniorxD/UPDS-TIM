@@ -1,0 +1,489 @@
+<div class="flex h-screen bg-slate-100 font-sans overflow-hidden">
+
+  <div *ngIf="isSidebarOpen()" (click)="closeSidebar()" 
+       class="fixed inset-0 bg-black/50 z-20 md:hidden transition-opacity"></div>
+
+  <aside [class.translate-x-0]="isSidebarOpen()" 
+         [class.-translate-x-full]="!isSidebarOpen()"
+         class="fixed inset-y-0 left-0 w-72 bg-gradient-to-b from-[#227ffd] to-blue-900 text-white flex flex-col shadow-2xl z-30 transition-transform duration-300 md:relative md:translate-x-0">
+    
+    <div class="absolute top-0 left-0 w-full h-full opacity-5 pointer-events-none" 
+         style="background-image: radial-gradient(#ffffff 1px, transparent 1px); background-size: 20px 20px;">
+    </div>
+
+    <button (click)="closeSidebar()" class="absolute top-4 right-4 md:hidden text-white/70 hover:text-white">
+      <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
+    </button>
+
+    <div class="h-24 flex items-center justify-center border-b border-white/10 relative z-10 p-4 mt-8 md:mt-0">
+      <img src="assets/upds_logo2.png" alt="UPDS Logo" class="h-12 object-contain filter drop-shadow-lg">
+    </div>
+
+    <div class="px-6 py-8 text-center relative z-10">
+      <div class="w-20 h-20 rounded-full bg-white/20 mx-auto mb-3 flex items-center justify-center text-3xl font-bold border-4 border-white/10 backdrop-blur-sm shadow-inner">
+        {{ currentUser?.nombre?.charAt(0) || 'E' }}
+      </div>
+      <h3 class="font-bold text-lg truncate px-2">{{ currentUser?.nombre || 'Cargando...' }}</h3>
+      <p class="text-blue-200 text-xs uppercase tracking-widest mt-1">Estudiante</p>
+    </div>
+
+    <nav class="flex-1 px-4 space-y-2 relative z-10 mt-2">
+      <button (click)="changeView('search')" 
+        [class]="currentView() === 'search' ? 'bg-white text-[#227ffd] shadow-lg' : 'text-blue-100 hover:bg-white/10 hover:text-white'"
+        class="w-full flex items-center px-4 py-3.5 rounded-xl font-medium transition-all duration-200 group">
+        <svg class="w-5 h-5 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
+        Explorar Tesis
+      </button>
+
+      <button (click)="changeView('project')" 
+        [class]="currentView() === 'project' ? 'bg-white text-[#227ffd] shadow-lg' : 'text-blue-100 hover:bg-white/10 hover:text-white'"
+        class="w-full flex items-center px-4 py-3.5 rounded-xl font-medium transition-all duration-200 group">
+        <svg class="w-5 h-5 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+        Mi Proyecto
+        <span *ngIf="currentProject()" class="ml-auto w-2 h-2 rounded-full bg-green-400"></span>
+      </button>
+
+      <button (click)="changeView('profile')" 
+        [class]="currentView() === 'profile' ? 'bg-white text-[#227ffd] shadow-lg' : 'text-blue-100 hover:bg-white/10 hover:text-white'"
+        class="w-full flex items-center px-4 py-3.5 rounded-xl font-medium transition-all duration-200 group">
+        <svg class="w-5 h-5 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
+        Mi Perfil
+      </button>
+    </nav>
+
+    <div class="p-6 relative z-10 border-t border-white/10">
+      <button (click)="onLogout()" class="flex items-center w-full px-4 py-3 text-blue-200 hover:bg-red-500/20 hover:text-white rounded-xl transition-all duration-200">
+        <svg class="w-5 h-5 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" /></svg>
+        <span class="font-medium">Salir</span>
+      </button>
+    </div>
+  </aside>
+
+  <main class="flex-1 flex flex-col h-full overflow-hidden relative w-full">
+    
+    <header class="h-20 bg-white border-b border-slate-200 flex items-center justify-between px-4 md:px-8 shadow-sm z-10 shrink-0">
+      <div class="flex items-center gap-4">
+        <button (click)="toggleSidebar()" class="md:hidden text-slate-500 hover:text-[#227ffd]">
+          <svg class="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" /></svg>
+        </button>
+
+        <div>
+          <h1 class="text-xl md:text-2xl font-bold text-slate-800">
+            @switch (currentView()) {
+              @case ('search') { Repositorio Académico }
+              @case ('project') { Gestión de Proyecto }
+              @case ('profile') { Mi Perfil }
+            }
+          </h1>
+          <p class="text-slate-500 text-xs md:text-sm hidden md:block">Universidad Privada Domingo Savio</p>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-4">
+        <span class="text-sm font-medium text-slate-600 hidden md:block">{{ currentUser?.email }}</span>
+        <div class="h-10 w-10 rounded-full bg-slate-100 border border-slate-200 flex items-center justify-center text-[#227ffd] font-bold">
+          {{ currentUser?.nombre?.charAt(0) }}
+        </div>
+      </div>
+    </header>
+
+    <div class="flex-1 overflow-y-auto p-4 md:p-8 scroll-smooth">
+      
+      @if (isLoading()) {
+        <div class="flex flex-col items-center justify-center h-full text-slate-400">
+          <svg class="animate-spin h-10 w-10 text-[#227ffd] mb-4" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+          <p>Cargando...</p>
+        </div>
+      } @else {
+
+        @if (currentView() === 'search') {
+          <div class="max-w-5xl mx-auto space-y-8 animate-fade-in-up">
+            
+            <div class="bg-white rounded-2xl shadow-xl shadow-blue-900/5 p-6 md:p-8 border border-slate-100">
+              <h2 class="text-xl font-bold text-slate-800 mb-6 text-center">Encuentra tesis, proyectos y monografías</h2>
+              
+              <form [formGroup]="searchForm" (ngSubmit)="onSearch()">
+                <div class="flex flex-col md:flex-row gap-4 mb-6">
+                  <div class="relative flex-1">
+                    <span class="absolute left-4 top-3.5 text-slate-400">
+                      <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
+                    </span>
+                    <input type="text" formControlName="query" placeholder="Buscar por título, autor..." class="w-full pl-12 pr-4 py-3.5 rounded-xl bg-slate-50 border border-slate-200 focus:bg-white focus:border-[#227ffd] focus:ring-4 focus:ring-[#227ffd]/10 outline-none transition-all text-base md:text-lg">
+                  </div>
+                  <button type="submit" class="bg-[#227ffd] hover:bg-blue-600 text-white px-8 py-3.5 rounded-xl font-bold shadow-lg shadow-blue-500/30 transition-all">Buscar</button>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 border-t border-slate-100 pt-6">
+                  <select formControlName="category" class="px-4 py-2.5 rounded-lg bg-slate-50 border border-slate-200 text-slate-600 text-sm focus:border-[#227ffd] outline-none">
+                    <option value="">Todas las Categorías</option>
+                    <option value="Sistemas">Ing. Sistemas</option>
+                    <option value="Derecho">Derecho</option>
+                    <option value="Comercial">Ing. Comercial</option>
+                    </select>
+                  <select formControlName="year" class="px-4 py-2.5 rounded-lg bg-slate-50 border border-slate-200 text-slate-600 text-sm focus:border-[#227ffd] outline-none">
+                    <option value="">Año de Publicación</option>
+                    <option value="2025">2025</option>
+                    <option value="2024">2024</option>
+                    <option value="2023">2023</option>
+                  </select>
+                </div>
+              </form>
+            </div>
+
+            <div>
+              <h3 class="font-bold text-slate-700 mb-4 flex items-center">
+                <svg class="w-5 h-5 mr-2 text-[#227ffd]" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                Resultados (@if(searchResults().length > 0){ {{searchResults().length}} } @else { 0 })
+              </h3>
+              
+              <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                @for (item of searchResults(); track item.id) {
+                  <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 hover:shadow-md hover:border-blue-300 transition-all cursor-pointer group flex flex-col h-full">
+                    <div class="flex justify-between items-start mb-4">
+                      <span class="bg-blue-50 text-[#227ffd] text-xs font-bold px-2 py-1 rounded-md uppercase">{{ item.category || 'Tesis' }}</span>
+                      
+                      <span class="text-slate-400 text-xs">
+                         {{ item.createdAt?.seconds * 1000 | date:'yyyy' }}
+                      </span>
+                    </div>
+                    
+                    <h4 class="font-bold text-slate-800 mb-2 group-hover:text-[#227ffd] transition-colors line-clamp-2">{{ item.title }}</h4>
+                    <p class="text-sm text-slate-500 mb-4 line-clamp-2">{{ item.description }}</p>
+                    
+                    <div class="mt-auto pt-4 border-t border-slate-50 flex justify-between items-center">
+                        <span class="text-xs text-slate-400">Autor: {{ item.studentName || 'Anonimo' }}</span>
+                        
+                        @if(item.fileUrl) {
+                            <a [href]="item.fileUrl" target="_blank" class="flex items-center text-xs text-[#227ffd] font-bold hover:underline">
+                                Ver PDF
+                                <svg class="w-4 h-4 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" /></svg>
+                            </a>
+                        }
+                    </div>
+                  </div>
+                } @empty {
+                   <div class="col-span-full py-12 text-center text-slate-400 bg-white rounded-2xl border border-dashed border-slate-200">
+                      <svg class="w-16 h-16 mx-auto mb-4 text-slate-200" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                      <p>No se encontraron documentos aprobados.</p>
+                   </div>
+                }
+              </div>
+            </div>
+
+          </div>
+        }
+
+        @if (currentView() === 'project') {
+  <div class="max-w-5xl mx-auto animate-fade-in-up">
+    
+    @if (currentProject()) {
+
+      @if (!isEditing() && currentProject()?.status === 'observado') {
+        <div class="bg-red-50 border-l-4 border-red-500 p-6 mb-8 flex items-start gap-4 rounded-r-xl shadow-sm animate-pulse-slow">
+          <div class="p-2 bg-red-100 rounded-full text-red-600 shrink-0">
+            <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
+          </div>
+          <div class="flex-1">
+            <h3 class="text-lg font-bold text-red-700">PROYECTO OBSERVADO</h3>
+            <p class="text-red-600 font-medium mt-1">Tu tutor ha realizado observaciones críticas. Por favor, revisa y sube una nueva versión.</p>
+          </div>
+          <button (click)="startEditing()" class="bg-red-600 hover:bg-red-700 text-white px-6 py-2.5 rounded-lg font-bold text-sm shadow-lg shadow-red-500/30 transition-all transform hover:-translate-y-0.5">
+            Corregir Ahora
+          </button>
+        </div>
+      }
+
+      @if (isEditing()) {
+        <div class="bg-white rounded-2xl shadow-xl border border-[#227ffd]/20 p-8">
+            <div class="flex justify-between items-center mb-6 border-b border-slate-100 pb-4">
+              <div>
+                <h2 class="text-2xl font-bold text-slate-800">Editar Proyecto</h2>
+                <p class="text-slate-500 text-sm">Sube una nueva versión de tu documento.</p>
+              </div>
+              <button (click)="cancelEditing()" class="text-slate-400 hover:text-red-500 transition-colors p-2 hover:bg-red-50 rounded-full" title="Cancelar">
+                <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
+              </button>
+            </div>
+    
+            <form [formGroup]="projectForm" (ngSubmit)="onSubmit()" class="space-y-6">
+               
+               <div>
+                  <label class="block text-sm font-bold text-slate-700 mb-2">Título</label>
+                  <input type="text" formControlName="title" class="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 focus:bg-white focus:border-[#227ffd] focus:ring-4 focus:ring-[#227ffd]/10 outline-none transition-all font-medium">
+               </div>
+    
+               <div>
+                  <label class="block text-sm font-bold text-slate-700 mb-2">Descripción</label>
+                  <textarea formControlName="description" rows="4" class="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 focus:bg-white focus:border-[#227ffd] focus:ring-4 focus:ring-[#227ffd]/10 outline-none transition-all font-medium resize-none"></textarea>
+               </div>
+    
+               <div>
+                 <label class="block text-sm font-bold text-slate-700 mb-2">Actualizar Documento <span class="text-slate-400 font-normal">(Opcional)</span></label>
+                 
+                 <div class="relative border-2 border-dashed border-slate-300 rounded-xl bg-slate-50 transition-all duration-300 p-8 text-center group"
+                      [ngClass]="{'hover:bg-blue-50 hover:border-[#227ffd] cursor-pointer': !selectedFile, 'bg-blue-50/30 border-blue-200': selectedFile}">
+                   
+                   <input type="file" (change)="onFileSelected($event)" [class.hidden]="selectedFile" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10">
+                   
+                   <div *ngIf="!selectedFile" class="flex flex-col items-center pointer-events-none">
+                      <div class="text-slate-400 mb-2 group-hover:text-[#227ffd] transition-colors">
+                          <svg class="w-10 h-10" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" /></svg>
+                      </div>
+                      <p class="text-sm font-bold text-slate-600">Haz clic para subir una nueva versión</p>
+                      <p class="text-xs text-slate-400 mt-1">Si no seleccionas nada, se mantiene: <strong>{{ currentProject()?.originalFileName }}</strong></p>
+                   </div>
+    
+                   <div *ngIf="selectedFile" class="relative z-20 pointer-events-auto">
+                      <div class="text-[#227ffd] mb-2 flex justify-center">
+                          <svg class="w-10 h-10" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+                      </div>
+                      <p class="font-bold text-[#227ffd]">{{ selectedFile.name }}</p>
+                      <p class="text-xs text-green-600 font-bold mb-3">Nuevo archivo listo para subir</p>
+                      
+                      <button type="button" (click)="removeSelectedFile()" class="px-3 py-1.5 bg-red-50 text-red-600 hover:bg-red-100 rounded-lg text-xs font-bold transition-colors">
+                          Cancelar cambio
+                      </button>
+                   </div>
+                 </div>
+               </div>
+    
+               <div class="flex gap-3 pt-2">
+                 <button type="button" (click)="cancelEditing()" class="flex-1 py-3.5 rounded-xl border border-slate-200 text-slate-600 font-bold hover:bg-slate-50 transition-colors">Cancelar</button>
+                 <button type="submit" [disabled]="projectForm.invalid || isLoading()" class="flex-1 bg-[#227ffd] hover:bg-blue-600 text-white font-bold py-3.5 rounded-xl shadow-lg transition-all flex justify-center items-center gap-2">
+                    <span *ngIf="isLoading()" class="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></span>
+                    <span *ngIf="!isLoading()">Guardar Cambios</span>
+                 </button>
+               </div>
+            </form>
+        </div>
+      } 
+      
+      @else {
+          <div class="bg-white rounded-t-2xl border-b border-slate-100 shadow-sm relative overflow-hidden">
+             
+             <div class="absolute top-0 right-0 p-4 opacity-5 pointer-events-none">
+                <svg class="w-40 h-40" fill="currentColor" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8l-6-6z" /></svg>
+             </div>
+    
+             <div class="p-8 flex flex-col md:flex-row justify-between items-start relative z-10 gap-6">
+                <div class="w-full">
+                   <div class="flex items-center gap-3 mb-4">
+                     <span [ngClass]="{
+                       'bg-blue-100 text-[#227ffd]': currentProject()?.status !== 'aprobado',
+                       'bg-green-100 text-green-700': currentProject()?.status === 'aprobado'
+                     }" class="text-xs font-bold px-2 py-1 rounded uppercase tracking-wider">
+                       {{ currentProject()?.status === 'aprobado' ? 'Habilitado' : 'En Proceso' }}
+                     </span>
+                     <span class="text-slate-400 text-xs flex items-center">
+                        <svg class="w-3 h-3 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                        Actualizado: {{ ((currentProject()?.updatedAt?.seconds ?? 0) * 1000) | date:'short' }}
+                     </span>
+                   </div>
+    
+                   <h2 class="text-2xl md:text-3xl font-bold text-slate-800 mb-3 leading-tight">{{ currentProject()?.title }}</h2>
+                   <p class="text-slate-500 max-w-2xl mb-6 leading-relaxed">{{ currentProject()?.description }}</p>
+                   
+                   <div class="flex flex-wrap items-center gap-4 text-sm text-slate-600 bg-slate-50 w-fit px-4 py-3 rounded-xl border border-slate-200 shadow-sm">
+                      
+                      <div class="flex items-center border-r border-slate-200 pr-4">
+                          <svg class="w-5 h-5 mr-2 text-red-500" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 6a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1zm1 3a1 1 0 100 2h6a1 1 0 100-2H7z" clip-rule="evenodd"/></svg>
+                          <span class="font-bold mr-1 text-slate-700">Archivo:</span> 
+                          <span class="truncate max-w-[150px] md:max-w-[200px]">{{ currentProject()?.originalFileName || 'Documento.pdf' }}</span>
+                      </div>
+
+                      <div class="flex items-center">
+                          @if (!currentProject()?.virusScanStatus || currentProject()?.virusScanStatus === 'pending') {
+                              <span class="flex items-center text-xs font-bold text-blue-500 bg-blue-50 px-2 py-1 rounded-md border border-blue-100">
+                                  <svg class="animate-spin w-3 h-3 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
+                                  Analizando...
+                              </span>
+                          }
+                          @else if (currentProject()?.virusScanStatus === 'clean') {
+                              <span class="flex items-center text-xs font-bold text-green-600 bg-green-50 px-2 py-1 rounded-md border border-green-100">
+                                  <svg class="w-3 h-3 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" /></svg>
+                                  Verificado
+                              </span>
+                          }
+                          @else if (currentProject()?.virusScanStatus === 'infected') {
+                              <span class="flex items-center text-xs font-bold text-red-600 bg-red-50 px-2 py-1 rounded-md border border-red-100">
+                                  <svg class="w-3 h-3 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
+                                  Amenaza
+                              </span>
+                          }
+                      </div>
+
+                      @if(currentProject()?.fileUrl) {
+                          <div class="border-l border-slate-200 pl-4">
+                              <a [href]="currentProject()?.fileUrl" target="_blank" class="text-[#227ffd] font-bold hover:underline flex items-center text-xs">
+                                  Ver
+                                  <svg class="w-3 h-3 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" /></svg>
+                              </a>
+                          </div>
+                      }
+                   </div>
+
+                </div>
+
+                @if (currentProject()?.status === 'subido' || currentProject()?.status === 'observado') {
+                  <button (click)="startEditing()" class="group flex items-center px-4 py-2 bg-white border border-slate-200 rounded-xl shadow-sm hover:border-[#227ffd] hover:text-[#227ffd] transition-all shrink-0">
+                    <div class="w-8 h-8 rounded-full bg-slate-50 group-hover:bg-blue-50 flex items-center justify-center mr-2 transition-colors">
+                       <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>
+                    </div>
+                    <span class="font-bold text-slate-600 group-hover:text-[#227ffd]">Editar</span>
+                  </button>
+                }
+             </div>
+          </div>
+    
+          <div class="bg-white rounded-b-2xl p-8 md:p-10 shadow-xl shadow-slate-200/50 mb-8 overflow-x-auto">
+             <div class="relative min-w-[600px] px-4 py-4">
+                  <div class="absolute top-1/2 left-0 w-full h-1.5 bg-slate-100 rounded-full -translate-y-1/2 -z-20"></div>
+                  
+                  <div class="absolute top-1/2 left-0 h-1.5 bg-gradient-to-r from-green-400 to-[#227ffd] rounded-full -translate-y-1/2 -z-10 transition-all duration-[2000ms] ease-in-out shadow-[0_0_10px_rgba(34,127,253,0.3)]"
+                       [style.width]="
+                         currentProject()?.status === 'aprobado' ? '100%' :
+                         currentProject()?.status === 'revision_tutor' ? '75%' :
+                         (currentProject()?.plagiarismScore !== undefined && currentProject()?.plagiarismScore !== null) ? '50%' :
+                         (currentProject()?.virusScanStatus === 'clean') ? '25%' :
+                         '5%'
+                       ">
+                  </div>
+
+                  <div class="flex justify-between items-start w-full relative -mt-3">
+                    
+                    <div class="flex flex-col items-center group w-24">
+                      <div class="w-10 h-10 md:w-12 md:h-12 rounded-full bg-green-500 text-white border-[4px] border-white shadow-lg flex items-center justify-center mb-3">
+                        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" /></svg>
+                      </div>
+                      <h4 class="font-bold text-slate-700 text-xs md:text-sm">Recepción</h4>
+                    </div>
+
+                    <div class="flex flex-col items-center group w-24">
+                      <div [ngClass]="{
+                        'bg-green-500 text-white': currentProject()?.virusScanStatus === 'clean',
+                        'bg-red-500 text-white': currentProject()?.virusScanStatus === 'infected',
+                        'bg-white text-[#227ffd] border-[#227ffd] animate-pulse ring-4 ring-blue-50': !currentProject()?.virusScanStatus || currentProject()?.virusScanStatus === 'pending',
+                        'bg-slate-200 text-slate-400': false
+                      }" class="w-10 h-10 md:w-12 md:h-12 rounded-full border-[4px] border-white shadow-lg flex items-center justify-center mb-3 transition-colors">
+                         <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
+                      </div>
+                      <h4 class="font-bold text-slate-700 text-xs md:text-sm">Seguridad</h4>
+                    </div>
+
+                    <div class="flex flex-col items-center group w-24">
+                       <div [ngClass]="{
+                         'bg-green-500 text-white': currentProject()?.plagiarismScore !== undefined && currentProject()?.plagiarismScore !== null,
+                         'bg-slate-200 text-slate-400': !currentProject()?.virusScanStatus || currentProject()?.virusScanStatus === 'pending'
+                      }" class="w-10 h-10 md:w-12 md:h-12 rounded-full border-[4px] border-white shadow-lg flex items-center justify-center mb-3">
+                        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+                      </div>
+                      <h4 class="font-bold text-slate-700 text-xs md:text-sm">Plagio</h4>
+                    </div>
+
+                    <div class="flex flex-col items-center group w-24">
+                      <div [ngClass]="{
+                        'bg-blue-500 text-white': currentProject()?.status === 'revision_tutor',
+                        'bg-slate-200 text-slate-400': currentProject()?.status === 'subido'
+                      }" class="w-10 h-10 md:w-12 md:h-12 rounded-full border-[4px] border-white shadow-lg flex items-center justify-center mb-3">
+                        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" /></svg>
+                      </div>
+                      <h4 class="font-bold text-slate-700 text-xs md:text-sm">Tutor</h4>
+                    </div>
+
+                    <div class="flex flex-col items-center group w-24">
+                      <div [ngClass]="{
+                        'bg-green-600 text-white ring-4 ring-green-100': currentProject()?.status === 'aprobado',
+                        'bg-slate-200 text-slate-400': currentProject()?.status !== 'aprobado'
+                      }" class="w-10 h-10 md:w-12 md:h-12 rounded-full border-[4px] border-white shadow-lg flex items-center justify-center mb-3">
+                        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" /></svg>
+                      </div>
+                      <h4 class="font-bold text-slate-700 text-xs md:text-sm">Defensa</h4>
+                    </div>
+
+                  </div>
+             </div>
+          </div>
+      }
+
+    } 
+    @else {
+       <div class="bg-white rounded-2xl shadow-xl shadow-slate-200/60 border border-slate-100 p-8 animate-fade-in-up">
+         
+         <div class="text-center mb-8">
+           <h2 class="text-2xl font-bold text-slate-800">Registrar Nuevo Proyecto</h2>
+           <p class="text-slate-500 mt-1">Completa los datos y sube tu documento para revisión.</p>
+         </div>
+
+         <form [formGroup]="projectForm" (ngSubmit)="onSubmit()" class="space-y-6">
+             <div>
+                <label class="block text-sm font-bold text-slate-700 mb-2">Título de la Investigación</label>
+                <input type="text" formControlName="title" class="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 focus:bg-white focus:border-[#227ffd] focus:ring-4 focus:ring-[#227ffd]/10 outline-none transition-all font-medium">
+             </div>
+
+             <div>
+                <label class="block text-sm font-bold text-slate-700 mb-2">Descripción / Resumen</label>
+                <textarea formControlName="description" rows="4" class="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 focus:bg-white focus:border-[#227ffd] focus:ring-4 focus:ring-[#227ffd]/10 outline-none transition-all font-medium resize-none"></textarea>
+             </div>
+
+             <div>
+                <label class="block text-sm font-bold text-slate-700 mb-2">Documento de Propuesta (PDF/DOCX)</label>
+                <div class="relative border-2 border-dashed border-slate-300 rounded-xl bg-slate-50 hover:bg-blue-50 hover:border-[#227ffd] transition-all duration-300 p-10 text-center cursor-pointer group"
+                  [ngClass]="{'bg-blue-50/30 border-blue-200': selectedFile}">
+                  <input type="file" (change)="onFileSelected($event)" [class.hidden]="selectedFile" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10">
+                  <div class="flex flex-col items-center pointer-events-none transition-transform" [ngClass]="{'group-hover:scale-105': !selectedFile}">
+                    <div *ngIf="!selectedFile">
+                        <p class="text-sm font-bold text-slate-600 group-hover:text-slate-800">Haz clic o arrastra tu archivo aquí</p>
+                    </div>
+                    <div *ngIf="selectedFile" class="pointer-events-auto z-20">
+                        <p class="text-sm font-bold text-[#227ffd]">Archivo seleccionado: {{ selectedFile.name }}</p>
+                        <button type="button" (click)="removeSelectedFile()" class="mt-2 text-xs text-red-500 font-bold hover:underline">Eliminar y cambiar</button>
+                    </div>
+                  </div>
+                </div>
+             </div>
+
+             <button type="submit" [disabled]="projectForm.invalid || !selectedFile || isLoading()" 
+                class="w-full bg-[#227ffd] hover:bg-blue-600 text-white font-bold py-4 rounded-xl shadow-lg transition-all flex justify-center items-center gap-2">
+                <span *ngIf="isLoading()" class="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></span>
+                <span *ngIf="!isLoading()">Enviar Propuesta</span>
+             </button>
+         </form>
+       </div>
+    }
+  </div>
+}
+
+        @if (currentView() === 'profile') {
+           <div class="max-w-2xl mx-auto animate-fade-in-up">
+            <div class="bg-white rounded-2xl shadow-lg border border-slate-100 overflow-hidden">
+               <div class="h-32 bg-gradient-to-r from-[#227ffd] to-blue-400"></div>
+               <div class="px-8 pb-8">
+                  <div class="relative -top-12 mb-[-30px]">
+                     <div class="w-24 h-24 rounded-full bg-white p-1 shadow-lg">
+                        <div class="w-full h-full rounded-full bg-slate-200 flex items-center justify-center text-2xl font-bold text-slate-500">
+                           {{ currentUser?.nombre?.charAt(0) }}
+                        </div>
+                     </div>
+                  </div>
+                  <h2 class="text-2xl font-bold text-slate-800 mt-4">{{ currentUser?.nombre }}</h2>
+                  <p class="text-slate-500">{{ currentUser?.email }}</p>
+                  
+                  <div class="mt-8 grid grid-cols-2 gap-4">
+                     <div class="p-4 bg-slate-50 rounded-xl">
+                        <p class="text-xs text-slate-400 uppercase font-bold">Rol</p>
+                        <p class="font-bold text-slate-700 capitalize">{{ currentUser?.rol }}</p>
+                     </div>
+                     <div class="p-4 bg-slate-50 rounded-xl">
+                        <p class="text-xs text-slate-400 uppercase font-bold">ID Usuario</p>
+                        <p class="font-mono text-xs text-slate-700 truncate">{{ currentUser?.uid }}</p>
+                     </div>
+                  </div>
+               </div>
+            </div>
+          </div>
+        }
+
+      }
+    </div>
+  </main>
+</div>

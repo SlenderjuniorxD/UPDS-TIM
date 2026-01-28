@@ -1,0 +1,174 @@
+<div class="flex h-screen bg-slate-50 font-sans overflow-hidden">
+
+  <aside class="w-64 bg-white border-r border-slate-200 flex flex-col shadow-xl z-20">
+    <div class="h-20 flex items-center px-8 border-b border-slate-100">
+      <div class="w-8 h-8 rounded-lg bg-[#227ffd] flex items-center justify-center mr-3">
+        <span class="text-white font-bold text-lg">A</span>
+      </div>
+      <span class="font-bold text-slate-800 text-lg tracking-tight">AdminPanel</span>
+    </div>
+
+    <nav class="flex-1 px-4 py-6 space-y-2">
+      <a href="#" class="flex items-center px-4 py-3 bg-[#227ffd]/10 text-[#227ffd] rounded-xl transition-colors">
+        <svg class="w-5 h-5 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" /></svg>
+        <span class="font-medium">Usuarios</span>
+      </a>
+    </nav>
+
+    <div class="p-4 border-t border-slate-100">
+      <button (click)="onLogout()" class="flex items-center w-full px-4 py-3 text-slate-500 hover:bg-red-50 hover:text-red-500 rounded-xl transition-all duration-200 group">
+        <svg class="w-5 h-5 mr-3 group-hover:rotate-180 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" /></svg>
+        <span class="font-medium">Cerrar Sesión</span>
+      </button>
+    </div>
+  </aside>
+
+  <main class="flex-1 flex flex-col h-full relative overflow-hidden">
+    <header class="h-20 bg-white/80 backdrop-blur-md border-b border-slate-200 flex items-center justify-between px-8">
+      <h1 class="text-2xl font-bold text-slate-800">Gestión de Usuarios</h1>
+      <button (click)="openCreateModal()" class="bg-[#227ffd] hover:bg-blue-600 text-white px-6 py-2.5 rounded-xl font-medium shadow-lg shadow-blue-500/20 transition-all hover:-translate-y-0.5 active:translate-y-0 flex items-center">
+        <svg class="w-5 h-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" /></svg>
+        Nuevo Usuario
+      </button>
+    </header>
+
+    <div class="flex-1 overflow-auto p-8">
+      <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+        <table class="w-full text-left border-collapse">
+          <thead>
+            <tr class="bg-slate-50 border-b border-slate-100 text-xs uppercase text-slate-500 font-semibold tracking-wider">
+              <th class="px-6 py-4">Usuario</th>
+              <th class="px-6 py-4">Carrera</th> <th class="px-6 py-4">Correo</th>
+              <th class="px-6 py-4">Rol</th>
+              <th class="px-6 py-4 text-right">Acciones</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-slate-100">
+            @for (user of users$ | async; track user.uid) {
+              <tr class="hover:bg-slate-50/50 transition-colors group">
+                <td class="px-6 py-4">
+                  <div class="flex items-center">
+                    <div class="h-10 w-10 rounded-full bg-gradient-to-br from-blue-100 to-indigo-100 text-[#227ffd] flex items-center justify-center font-bold text-sm mr-3">
+                      {{ user.nombre.charAt(0).toUpperCase() }}
+                    </div>
+                    <span class="font-medium text-slate-700">{{ user.nombre }}</span>
+                  </div>
+                </td>
+                
+                <td class="px-6 py-4">
+                  @if(user.carrera) {
+                    <span class="text-xs font-bold text-slate-500 bg-slate-100 px-2 py-1 rounded border border-slate-200">
+                      {{ user.carrera }}
+                    </span>
+                  } @else {
+                    <span class="text-slate-300 text-xs">-</span>
+                  }
+                </td>
+
+                <td class="px-6 py-4 text-sm text-slate-500">{{ user.email }}</td>
+                
+                <td class="px-6 py-4">
+                  <span [ngClass]="{
+                    'bg-purple-100 text-purple-700': user.rol === 'admin',
+                    'bg-green-100 text-green-700': user.rol === 'estudiante',
+                    'bg-amber-100 text-amber-700': user.rol === 'investigador',
+                    'bg-cyan-100 text-cyan-700': user.rol === 'evaluador'
+                  }" class="px-3 py-1 rounded-full text-xs font-semibold uppercase tracking-wide">
+                    {{ user.rol }}
+                  </span>
+                </td>
+
+                <td class="px-6 py-4 text-right space-x-2">
+                  <button (click)="openEditModal(user)" class="text-slate-400 hover:text-[#227ffd] transition-colors p-2 hover:bg-blue-50 rounded-lg">
+                    <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
+                  </button>
+                  <button (click)="onDelete(user.uid)" class="text-slate-400 hover:text-red-500 transition-colors p-2 hover:bg-red-50 rounded-lg">
+                    <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                  </button>
+                </td>
+              </tr>
+            } @empty {
+              <tr>
+                <td colspan="5" class="px-6 py-12 text-center text-slate-400">
+                  No hay usuarios registrados aún.
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </main>
+
+  <div *ngIf="isModalOpen()" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm transition-opacity">
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden transform transition-all scale-100">
+      <div class="px-6 py-4 border-b border-slate-100 flex justify-between items-center bg-slate-50">
+        <h3 class="text-lg font-bold text-slate-800">{{ isEditMode() ? 'Editar Usuario' : 'Nuevo Usuario' }}</h3>
+        <button (click)="closeModal()" class="text-slate-400 hover:text-slate-600 transition-colors">
+          <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
+        </button>
+      </div>
+      
+      <form [formGroup]="userForm" (ngSubmit)="onSubmit()" class="p-6 space-y-4">
+        
+        <div>
+          <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Nombre Completo</label>
+          <input type="text" formControlName="nombre" class="w-full px-4 py-2.5 rounded-xl bg-slate-50 border border-slate-200 focus:border-[#227ffd] focus:ring-4 focus:ring-[#227ffd]/10 outline-none transition-all text-sm font-medium">
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Correo Electrónico</label>
+          <input type="email" formControlName="email" class="w-full px-4 py-2.5 rounded-xl bg-slate-50 border border-slate-200 focus:border-[#227ffd] focus:ring-4 focus:ring-[#227ffd]/10 outline-none transition-all text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed">
+        </div>
+
+        <div *ngIf="!isEditMode()">
+          <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Contraseña</label>
+          <input type="password" formControlName="password" class="w-full px-4 py-2.5 rounded-xl bg-slate-50 border border-slate-200 focus:border-[#227ffd] focus:ring-4 focus:ring-[#227ffd]/10 outline-none transition-all text-sm font-medium">
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Rol de Usuario</label>
+          <div class="relative">
+            <select formControlName="rol" class="w-full px-4 py-2.5 rounded-xl bg-slate-50 border border-slate-200 focus:border-[#227ffd] focus:ring-4 focus:ring-[#227ffd]/10 outline-none transition-all text-sm font-medium appearance-none">
+              <option value="estudiante">Estudiante</option>
+              <option value="investigador">Investigador</option>
+              <option value="evaluador">Evaluador</option>
+              <option value="admin">Administrador</option>
+            </select>
+            <div class="absolute inset-y-0 right-0 flex items-center px-3 pointer-events-none text-slate-500">
+              <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg>
+            </div>
+          </div>
+        </div>
+
+        <div *ngIf="userForm.get('rol')?.value !== 'admin'" class="animate-fade-in">
+          <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Carrera / Facultad</label>
+          <div class="relative">
+            <select formControlName="carrera" class="w-full px-4 py-2.5 rounded-xl bg-slate-50 border border-slate-200 focus:border-[#227ffd] focus:ring-4 focus:ring-[#227ffd]/10 outline-none transition-all text-sm font-medium appearance-none">
+              <option value="" disabled selected>-- Selecciona una Carrera --</option>
+              @for (carrera of carreras; track carrera) {
+                <option [value]="carrera">{{ carrera }}</option>
+              }
+            </select>
+            <div class="absolute inset-y-0 right-0 flex items-center px-3 pointer-events-none text-slate-500">
+              <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg>
+            </div>
+          </div>
+          <div *ngIf="userForm.get('carrera')?.touched && userForm.get('carrera')?.invalid" class="text-red-500 text-xs mt-1 font-bold">
+             * Selecciona una carrera
+          </div>
+        </div>
+
+        <div class="pt-4 flex gap-3">
+          <button type="button" (click)="closeModal()" class="flex-1 py-2.5 rounded-xl border border-slate-200 text-slate-600 font-bold hover:bg-slate-50 transition-colors">Cancelar</button>
+          <button type="submit" [disabled]="userForm.invalid || isLoading()" class="flex-1 py-2.5 rounded-xl bg-[#227ffd] text-white font-bold hover:bg-blue-600 shadow-lg shadow-blue-500/30 transition-all disabled:opacity-50 flex justify-center items-center">
+            <span *ngIf="isLoading()" class="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></span>
+            <span *ngIf="!isLoading()">{{ isEditMode() ? 'Guardar Cambios' : 'Registrar' }}</span>
+          </button>
+        </div>
+
+      </form>
+    </div>
+  </div>
+
+</div>

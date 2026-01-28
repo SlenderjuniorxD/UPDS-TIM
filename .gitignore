@@ -41,3 +41,15 @@ __screenshots__/
 # System files
 .DS_Store
 Thumbs.db
+
+# Dependencias
+/node_modules
+
+# Angular
+/.angular
+/.vscode
+/dist
+
+# Archivos de sistema
+.DS_Store
+Thumbs.db
