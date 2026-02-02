@@ -23,6 +23,7 @@ export interface Project {
   plagiarismScore?: number;
   
   status: ProjectStatus;
+  versions: string;
   createdAt: Timestamp;
   updatedAt: Timestamp;
 }

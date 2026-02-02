@@ -1,174 +1,230 @@
 <div class="flex h-screen bg-slate-50 font-sans overflow-hidden">
 
-  <aside class="w-64 bg-white border-r border-slate-200 flex flex-col shadow-xl z-20">
-    <div class="h-20 flex items-center px-8 border-b border-slate-100">
-      <div class="w-8 h-8 rounded-lg bg-[#227ffd] flex items-center justify-center mr-3">
-        <span class="text-white font-bold text-lg">A</span>
+  <aside class="w-72 bg-white border-r border-slate-200 flex flex-col shadow-2xl z-20">
+    <div class="h-24 flex items-center px-8 border-b border-slate-50">
+      <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-[#227ffd] to-purple-600 flex items-center justify-center mr-3 shadow-lg shadow-blue-500/30">
+        <svg class="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" /></svg>
       </div>
-      <span class="font-bold text-slate-800 text-lg tracking-tight">AdminPanel</span>
+      <div>
+        <span class="block font-bold text-slate-800 text-lg tracking-tight">AdminPanel</span>
+        <span class="block text-xs text-slate-400 font-medium uppercase tracking-wider">Gestión Tesis</span>
+      </div>
     </div>
 
     <nav class="flex-1 px-4 py-6 space-y-2">
-      <a href="#" class="flex items-center px-4 py-3 bg-[#227ffd]/10 text-[#227ffd] rounded-xl transition-colors">
+      <button (click)="changeView('users')" 
+        [class]="currentView() === 'users' ? 'bg-[#227ffd]/10 text-[#227ffd]' : 'text-slate-500 hover:bg-slate-50'"
+        class="w-full flex items-center px-4 py-3.5 rounded-xl transition-all font-medium group">
         <svg class="w-5 h-5 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" /></svg>
-        <span class="font-medium">Usuarios</span>
-      </a>
-    </nav>
+        Usuarios
+      </button>
 
+      <button (click)="changeView('monitoring')" 
+        [class]="currentView() === 'monitoring' ? 'bg-[#227ffd]/10 text-[#227ffd]' : 'text-slate-500 hover:bg-slate-50'"
+        class="w-full flex items-center px-4 py-3.5 rounded-xl transition-all font-medium group">
+        <svg class="w-5 h-5 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" /></svg>
+        Monitoreo Tesis
+      </button>
+
+      <button (click)="changeView('settings')" 
+        [class]="currentView() === 'settings' ? 'bg-[#227ffd]/10 text-[#227ffd]' : 'text-slate-500 hover:bg-slate-50'"
+        class="w-full flex items-center px-4 py-3.5 rounded-xl transition-all font-medium group">
+        <svg class="w-5 h-5 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" /></svg>
+        Configuración
+      </button>
+    </nav>
     <div class="p-4 border-t border-slate-100">
-      <button (click)="onLogout()" class="flex items-center w-full px-4 py-3 text-slate-500 hover:bg-red-50 hover:text-red-500 rounded-xl transition-all duration-200 group">
-        <svg class="w-5 h-5 mr-3 group-hover:rotate-180 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" /></svg>
+      <button (click)="onLogout()" class="flex items-center w-full px-4 py-3 text-slate-500 hover:bg-red-50 hover:text-red-500 rounded-xl transition-all">
+        <svg class="w-5 h-5 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" /></svg>
         <span class="font-medium">Cerrar Sesión</span>
       </button>
     </div>
   </aside>
 
-  <main class="flex-1 flex flex-col h-full relative overflow-hidden">
-    <header class="h-20 bg-white/80 backdrop-blur-md border-b border-slate-200 flex items-center justify-between px-8">
-      <h1 class="text-2xl font-bold text-slate-800">Gestión de Usuarios</h1>
-      <button (click)="openCreateModal()" class="bg-[#227ffd] hover:bg-blue-600 text-white px-6 py-2.5 rounded-xl font-medium shadow-lg shadow-blue-500/20 transition-all hover:-translate-y-0.5 active:translate-y-0 flex items-center">
-        <svg class="w-5 h-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" /></svg>
-        Nuevo Usuario
-      </button>
+  <main class="flex-1 flex flex-col h-full relative overflow-hidden bg-slate-50/50">
+    
+    <header class="h-24 bg-white/80 backdrop-blur-md border-b border-slate-200 flex items-center justify-between px-8 z-10 sticky top-0">
+      <div>
+        <h1 class="text-2xl font-bold text-slate-800">
+          @switch (currentView()) {
+            @case ('users') { Gestión de Usuarios }
+            @case ('monitoring') { Monitoreo Global }
+            @case ('settings') { Calendario Académico }
+          }
+        </h1>
+        <p class="text-sm text-slate-500 font-medium mt-1">
+          @switch (currentView()) {
+            @case ('users') { Administra roles y accesos }
+            @case ('monitoring') { Supervisión de entregas y estados }
+            @case ('settings') { Define las fechas límite de entrega }
+          }
+        </p>
+      </div>
+
+      @if (currentView() === 'users') {
+        <button (click)="openCreateModal()" class="bg-[#227ffd] hover:bg-blue-600 text-white px-6 py-3 rounded-xl font-bold shadow-lg transition-all flex items-center gap-2">
+          <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" /></svg>
+          Nuevo Usuario
+        </button>
+      }
+      @if (currentView() === 'settings') {
+        <button (click)="saveDeadlines()" [disabled]="isSavingDates()" class="bg-purple-600 hover:bg-purple-700 text-white px-6 py-3 rounded-xl font-bold shadow-lg transition-all flex items-center gap-2 disabled:opacity-70">
+           @if(isSavingDates()) { <div class="animate-spin h-5 w-5 border-2 border-white border-t-transparent rounded-full"></div> } 
+           @else { <span>Guardar Calendario</span> }
+        </button>
+      }
     </header>
 
     <div class="flex-1 overflow-auto p-8">
-      <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-        <table class="w-full text-left border-collapse">
-          <thead>
-            <tr class="bg-slate-50 border-b border-slate-100 text-xs uppercase text-slate-500 font-semibold tracking-wider">
-              <th class="px-6 py-4">Usuario</th>
-              <th class="px-6 py-4">Carrera</th> <th class="px-6 py-4">Correo</th>
-              <th class="px-6 py-4">Rol</th>
-              <th class="px-6 py-4 text-right">Acciones</th>
-            </tr>
-          </thead>
-          <tbody class="divide-y divide-slate-100">
-            @for (user of users$ | async; track user.uid) {
-              <tr class="hover:bg-slate-50/50 transition-colors group">
-                <td class="px-6 py-4">
-                  <div class="flex items-center">
-                    <div class="h-10 w-10 rounded-full bg-gradient-to-br from-blue-100 to-indigo-100 text-[#227ffd] flex items-center justify-center font-bold text-sm mr-3">
-                      {{ user.nombre.charAt(0).toUpperCase() }}
-                    </div>
-                    <span class="font-medium text-slate-700">{{ user.nombre }}</span>
-                  </div>
-                </td>
-                
-                <td class="px-6 py-4">
-                  @if(user.carrera) {
-                    <span class="text-xs font-bold text-slate-500 bg-slate-100 px-2 py-1 rounded border border-slate-200">
-                      {{ user.carrera }}
-                    </span>
-                  } @else {
-                    <span class="text-slate-300 text-xs">-</span>
+
+      @switch (currentView()) {
+        
+        @case ('users') {
+          <div class="bg-white rounded-3xl shadow-sm border border-slate-200 overflow-hidden animate-fade-in-up">
+            <table class="w-full text-left border-collapse">
+               <thead>
+                <tr class="bg-slate-50 border-b border-slate-100 text-xs uppercase text-slate-500 font-bold tracking-wider">
+                  <th class="px-8 py-5">Usuario</th>
+                  <th class="px-6 py-5">Carrera</th>
+                  <th class="px-6 py-5">Rol</th>
+                  <th class="px-8 py-5 text-right">Acciones</th>
+                </tr>
+               </thead>
+               <tbody class="divide-y divide-slate-100">
+                  @for (user of users$ | async; track user.uid) {
+                    <tr class="hover:bg-slate-50/80 transition-colors">
+                       <td class="px-8 py-4 font-bold text-slate-700">{{ user.nombre }}</td>
+                       <td class="px-6 py-4 text-xs">{{ user.carrera || '-' }}</td>
+                       <td class="px-6 py-4"><span class="px-2 py-1 bg-slate-100 rounded text-xs uppercase font-bold">{{ user.rol }}</span></td>
+                       <td class="px-8 py-4 text-right">
+                          <button (click)="openEditModal(user)" class="text-blue-500 mr-2">Editar</button>
+                          <button (click)="onDelete(user.uid)" class="text-red-500">Eliminar</button>
+                       </td>
+                    </tr>
                   }
-                </td>
+               </tbody>
+            </table>
+          </div>
+        }
 
-                <td class="px-6 py-4 text-sm text-slate-500">{{ user.email }}</td>
-                
-                <td class="px-6 py-4">
-                  <span [ngClass]="{
-                    'bg-purple-100 text-purple-700': user.rol === 'admin',
-                    'bg-green-100 text-green-700': user.rol === 'estudiante',
-                    'bg-amber-100 text-amber-700': user.rol === 'investigador',
-                    'bg-cyan-100 text-cyan-700': user.rol === 'evaluador'
-                  }" class="px-3 py-1 rounded-full text-xs font-semibold uppercase tracking-wide">
-                    {{ user.rol }}
-                  </span>
-                </td>
+        @case ('monitoring') {
+          <div class="animate-fade-in-up space-y-6">
+            
+            <div class="grid grid-cols-3 gap-6">
+               <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 flex items-center gap-4">
+                  <div class="w-12 h-12 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center font-bold text-xl">{{ stats().total }}</div>
+                  <div><p class="text-xs font-bold text-slate-400 uppercase">Total Proyectos</p><p class="font-bold text-slate-700">Registrados</p></div>
+               </div>
+               <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 flex items-center gap-4">
+                  <div class="w-12 h-12 rounded-full bg-green-50 text-green-600 flex items-center justify-center font-bold text-xl">{{ stats().approved }}</div>
+                  <div><p class="text-xs font-bold text-slate-400 uppercase">Aprobados</p><p class="font-bold text-slate-700">Listos</p></div>
+               </div>
+               <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 flex items-center gap-4">
+                  <div class="w-12 h-12 rounded-full bg-orange-50 text-orange-600 flex items-center justify-center font-bold text-xl">{{ stats().pending }}</div>
+                  <div><p class="text-xs font-bold text-slate-400 uppercase">Pendientes</p><p class="font-bold text-slate-700">En proceso</p></div>
+               </div>
+            </div>
 
-                <td class="px-6 py-4 text-right space-x-2">
-                  <button (click)="openEditModal(user)" class="text-slate-400 hover:text-[#227ffd] transition-colors p-2 hover:bg-blue-50 rounded-lg">
-                    <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
-                  </button>
-                  <button (click)="onDelete(user.uid)" class="text-slate-400 hover:text-red-500 transition-colors p-2 hover:bg-red-50 rounded-lg">
-                    <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
-                  </button>
-                </td>
-              </tr>
-            } @empty {
-              <tr>
-                <td colspan="5" class="px-6 py-12 text-center text-slate-400">
-                  No hay usuarios registrados aún.
-                </td>
-              </tr>
-            }
-          </tbody>
-        </table>
-      </div>
+            <div class="bg-white rounded-3xl shadow-sm border border-slate-200 overflow-hidden">
+               <table class="w-full text-left">
+                  <thead class="bg-slate-50 border-b border-slate-100 text-xs uppercase text-slate-500 font-bold">
+                     <tr>
+                        <th class="px-6 py-4">Proyecto</th>
+                        <th class="px-6 py-4">Estudiante</th>
+                        <th class="px-6 py-4">Carrera</th>
+                        <th class="px-6 py-4 text-center">Plagio</th>
+                        <th class="px-6 py-4">Estado</th>
+                        <th class="px-6 py-4 text-right">Fecha</th>
+                     </tr>
+                  </thead>
+                  <tbody class="divide-y divide-slate-100 text-sm">
+                     @for (project of projects(); track project.id) {
+                        <tr class="hover:bg-slate-50 transition-colors">
+                           <td class="px-6 py-4 font-bold text-slate-700">{{ project.title }}</td>
+                           <td class="px-6 py-4 text-slate-600">{{ project.studentName }}</td>
+                           <td class="px-6 py-4">
+                              <span class="inline-block px-2 py-1 bg-blue-50 text-blue-600 text-[10px] font-bold uppercase rounded-full border border-blue-100">
+                                 {{ project.category || 'General' }}
+                              </span>
+                           </td>
+                           <td class="px-6 py-4 text-center">
+                              @if(project.plagiarismScore !== null) {
+                                 <span class="font-bold" [ngClass]="project.plagiarismScore > 20 ? 'text-red-500' : 'text-green-500'">
+                                    {{ project.plagiarismScore }}%
+                                 </span>
+                              } @else { <span class="text-slate-300">-</span> }
+                           </td>
+                           <td class="px-6 py-4">
+                              <span [ngClass]="{
+                                 'bg-green-100 text-green-700': project.status === 'aprobado',
+                                 'bg-red-100 text-red-700': project.status === 'observado',
+                                 'bg-yellow-100 text-yellow-700': project.status === 'revision_tutor',
+                                 'bg-slate-100 text-slate-600': project.status === 'subido'
+                              }" class="px-3 py-1 rounded-full text-[10px] font-bold uppercase">
+                                 {{ project.status }}
+                              </span>
+                           </td>
+                           <td class="px-6 py-4 text-right text-slate-400 text-xs font-mono">
+                              {{ project.createdAt?.seconds * 1000 | date:'shortDate' }}
+                           </td>
+                        </tr>
+                     } @empty {
+                        <tr><td colspan="6" class="p-8 text-center text-slate-400">No hay tesis registradas.</td></tr>
+                     }
+                  </tbody>
+               </table>
+            </div>
+          </div>
+        }
+
+        @case ('settings') {
+          <div class="animate-fade-in-up max-w-5xl mx-auto">
+             <div class="bg-purple-600 rounded-3xl p-8 mb-8 text-white relative overflow-hidden shadow-xl shadow-purple-500/30">
+               <div class="absolute top-0 right-0 -mr-16 -mt-16 w-64 h-64 bg-purple-500 rounded-full opacity-30 blur-3xl"></div>
+               <div class="relative z-10">
+                  <h2 class="text-2xl font-bold mb-2">Control de Fechas Límite</h2>
+                  <p class="text-purple-100 max-w-xl leading-relaxed">Establece la fecha máxima de entrega por carrera.</p>
+               </div>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              @for (carrera of carreras; track carrera) {
+                <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 hover:border-purple-300 transition-colors">
+                   <h3 class="font-bold text-slate-700 text-sm mb-2">{{ carrera }}</h3>
+                   <input type="date" [(ngModel)]="deadlines[carrera]" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 font-bold focus:ring-2 focus:ring-purple-500 outline-none">
+                </div>
+              }
+            </div>
+          </div>
+        }
+      }
     </div>
   </main>
-
-  <div *ngIf="isModalOpen()" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm transition-opacity">
-    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden transform transition-all scale-100">
-      <div class="px-6 py-4 border-b border-slate-100 flex justify-between items-center bg-slate-50">
-        <h3 class="text-lg font-bold text-slate-800">{{ isEditMode() ? 'Editar Usuario' : 'Nuevo Usuario' }}</h3>
-        <button (click)="closeModal()" class="text-slate-400 hover:text-slate-600 transition-colors">
-          <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
-        </button>
-      </div>
-      
-      <form [formGroup]="userForm" (ngSubmit)="onSubmit()" class="p-6 space-y-4">
-        
-        <div>
-          <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Nombre Completo</label>
-          <input type="text" formControlName="nombre" class="w-full px-4 py-2.5 rounded-xl bg-slate-50 border border-slate-200 focus:border-[#227ffd] focus:ring-4 focus:ring-[#227ffd]/10 outline-none transition-all text-sm font-medium">
-        </div>
-
-        <div>
-          <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Correo Electrónico</label>
-          <input type="email" formControlName="email" class="w-full px-4 py-2.5 rounded-xl bg-slate-50 border border-slate-200 focus:border-[#227ffd] focus:ring-4 focus:ring-[#227ffd]/10 outline-none transition-all text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed">
-        </div>
-
-        <div *ngIf="!isEditMode()">
-          <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Contraseña</label>
-          <input type="password" formControlName="password" class="w-full px-4 py-2.5 rounded-xl bg-slate-50 border border-slate-200 focus:border-[#227ffd] focus:ring-4 focus:ring-[#227ffd]/10 outline-none transition-all text-sm font-medium">
-        </div>
-
-        <div>
-          <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Rol de Usuario</label>
-          <div class="relative">
-            <select formControlName="rol" class="w-full px-4 py-2.5 rounded-xl bg-slate-50 border border-slate-200 focus:border-[#227ffd] focus:ring-4 focus:ring-[#227ffd]/10 outline-none transition-all text-sm font-medium appearance-none">
-              <option value="estudiante">Estudiante</option>
-              <option value="investigador">Investigador</option>
-              <option value="evaluador">Evaluador</option>
-              <option value="admin">Administrador</option>
-            </select>
-            <div class="absolute inset-y-0 right-0 flex items-center px-3 pointer-events-none text-slate-500">
-              <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg>
-            </div>
-          </div>
-        </div>
-
-        <div *ngIf="userForm.get('rol')?.value !== 'admin'" class="animate-fade-in">
-          <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Carrera / Facultad</label>
-          <div class="relative">
-            <select formControlName="carrera" class="w-full px-4 py-2.5 rounded-xl bg-slate-50 border border-slate-200 focus:border-[#227ffd] focus:ring-4 focus:ring-[#227ffd]/10 outline-none transition-all text-sm font-medium appearance-none">
-              <option value="" disabled selected>-- Selecciona una Carrera --</option>
-              @for (carrera of carreras; track carrera) {
-                <option [value]="carrera">{{ carrera }}</option>
-              }
-            </select>
-            <div class="absolute inset-y-0 right-0 flex items-center px-3 pointer-events-none text-slate-500">
-              <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg>
-            </div>
-          </div>
-          <div *ngIf="userForm.get('carrera')?.touched && userForm.get('carrera')?.invalid" class="text-red-500 text-xs mt-1 font-bold">
-             * Selecciona una carrera
-          </div>
-        </div>
-
-        <div class="pt-4 flex gap-3">
-          <button type="button" (click)="closeModal()" class="flex-1 py-2.5 rounded-xl border border-slate-200 text-slate-600 font-bold hover:bg-slate-50 transition-colors">Cancelar</button>
-          <button type="submit" [disabled]="userForm.invalid || isLoading()" class="flex-1 py-2.5 rounded-xl bg-[#227ffd] text-white font-bold hover:bg-blue-600 shadow-lg shadow-blue-500/30 transition-all disabled:opacity-50 flex justify-center items-center">
-            <span *ngIf="isLoading()" class="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></span>
-            <span *ngIf="!isLoading()">{{ isEditMode() ? 'Guardar Cambios' : 'Registrar' }}</span>
-          </button>
-        </div>
-
-      </form>
-    </div>
+  
+  <div *ngIf="isModalOpen()" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm">
+     <div class="bg-white rounded-2xl p-6 w-full max-w-md shadow-2xl">
+        <form [formGroup]="userForm" (ngSubmit)="onSubmit()" class="space-y-4">
+           <h3 class="font-bold text-lg mb-4">{{ isEditMode() ? 'Editar' : 'Nuevo' }} Usuario</h3>
+           <div><label class="text-xs font-bold uppercase text-slate-500">Nombre</label><input formControlName="nombre" class="w-full p-2 border rounded-lg bg-slate-50"></div>
+           <div><label class="text-xs font-bold uppercase text-slate-500">Email</label><input formControlName="email" class="w-full p-2 border rounded-lg bg-slate-50"></div>
+           <div *ngIf="!isEditMode()"><label class="text-xs font-bold uppercase text-slate-500">Password</label><input formControlName="password" type="password" class="w-full p-2 border rounded-lg bg-slate-50"></div>
+           <div>
+              <label class="text-xs font-bold uppercase text-slate-500">Rol</label>
+              <select formControlName="rol" (change)="onRoleChange()" class="w-full p-2 border rounded-lg bg-slate-50">
+                 <option value="estudiante">Estudiante</option><option value="evaluador">Evaluador</option><option value="admin">Admin</option>
+              </select>
+           </div>
+           <div *ngIf="userForm.get('rol')?.value !== 'admin'">
+              <label class="text-xs font-bold uppercase text-slate-500">Carrera</label>
+              <select formControlName="carrera" class="w-full p-2 border rounded-lg bg-slate-50">
+                 <option *ngFor="let c of carreras" [value]="c">{{c}}</option>
+              </select>
+           </div>
+           <div class="flex gap-2 mt-4">
+              <button type="button" (click)="closeModal()" class="flex-1 py-2 border rounded-lg">Cancelar</button>
+              <button type="submit" class="flex-1 py-2 bg-blue-600 text-white rounded-lg font-bold">Guardar</button>
+           </div>
+        </form>
+     </div>
   </div>
 
 </div>

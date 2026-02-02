@@ -1,13 +1,14 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, inject, signal, computed, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
-import { Timestamp } from '@angular/fire/firestore';
+import { Timestamp, Firestore, doc, getDoc } from '@angular/fire/firestore';
 import Swal from 'sweetalert2';
 import { AuthService } from '../../core/services/auth.service';
 import { UserService } from '../../core/services/user.service';
 import { ProjectService } from '../../core/services/project.service';
 import { Project } from '../../core/models/project.model';
 import { PdfUtilService } from '../../core/services/pdf-util.service';
+import { NotificationService } from '../../core/services/notification.service';
 
 type DashboardView = 'search' | 'project' | 'profile';
 
@@ -18,35 +19,69 @@ type DashboardView = 'search' | 'project' | 'profile';
   templateUrl: './dashboard.html',
   styleUrl: './dashboard.css',
 })
-export class StudentDashboard {
+export class StudentDashboard implements OnInit {
   private authService = inject(AuthService);
   private userService = inject(UserService);
   private projectService = inject(ProjectService);
+  private notificationService = inject(NotificationService);
+  private pdfUtil = inject(PdfUtilService);
+  private firestore = inject(Firestore);
   private fb = inject(FormBuilder);
+  
+  // SEÑALES DE ESTADO
   isEditing = signal(false);
-
+  isLoading = signal(false);      // Carga general
+  isSubmitting = signal(false);   // Botón guardar
+  isSidebarOpen = signal(false);
+  
+  // VISTAS
+  currentView = signal<DashboardView>('search');
+  
+  // DATOS USUARIO / PROYECTO
   currentUser: any = null;
   currentProject = signal<Project | null>(null);
-  isLoading = signal(false);
+  
+  // DATOS BUSCADOR
+  allApprovedProjects: any[] = []; 
+  searchResults = signal<any[]>([]);
+  
+  // DATOS NOTIFICACIONES
+  notifications = signal<any[]>([]);
+  unreadCount = signal(0);
+  showNotifications = signal(false);
 
-  isSidebarOpen = signal(false);
-  currentView = signal<DashboardView>('search');
-  private pdfUtil = inject(PdfUtilService);
+  // === HISTORIA DE USUARIO #2: FECHAS LÍMITE (LO QUE FALTABA) ===
+  deadlineDate = signal<Date | null>(null);
+  
+  daysRemaining = computed(() => {
+    const deadline = this.deadlineDate();
+    if (!deadline) return 0; // Si no hay fecha, 0
+
+    const today = new Date();
+    // Calculamos diferencia en milisegundos
+    const diffTime = deadline.getTime() - today.getTime();
+    // Convertimos a días
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+    return diffDays > 0 ? diffDays : 0;
+  });
+
+  // FORMULARIOS
   projectForm: FormGroup;
+  searchForm: FormGroup;
   selectedFile: File | null = null;
   
-
-  searchForm: FormGroup;
-  allApprovedProjects: any[] = []; // Copia completa para filtrar
-  searchResults = signal<any[]>([]);
-
-  
-
-  recentTheses = [
-    { title: 'Implementación de IA en Logística', autor: 'Ana Lopez', year: 2023, category: 'Sistemas' },
-    { title: 'Impacto del Marketing Digital en PyMES', autor: 'Carlos Perez', year: 2024, category: 'Comercial' },
-    { title: 'Seguridad en Redes IoT', autor: 'Maria Diaz', year: 2023, category: 'Redes' },
+  // FILTROS VISUALES
+  carreras = [
+    'Todas',
+    'Ingeniería de Sistemas',
+    'Ingeniería Comercial',
+    'Derecho',
+    'Psicología',
+    'Administración de Empresas',
+    'Contaduría Pública'
   ];
+  selectedCategory = signal('Todas');
 
   private Toast = Swal.mixin({
     toast: true, position: 'top-end', showConfirmButton: false,
@@ -55,74 +90,113 @@ export class StudentDashboard {
 
   constructor() {
     this.projectForm = this.fb.group({
-      title: ['', [Validators.required, Validators.minLength(10)]],
-      description: ['', [Validators.required, Validators.minLength(20)]]
+      title: ['', [Validators.required, Validators.minLength(5)]],
+      description: ['', [Validators.required, Validators.minLength(10)]]
     });
     this.searchForm = this.fb.group({
       query: [''],
       category: [''],
-      year: [''],
-      type: ['']
+      year: ['']
     });
-    this.loadInitialData();
   }
+
   async ngOnInit() {
-    this.loadInitialData();
-    this.loadApprovedProjects(); // Cargar tesis aprobadas al inicio
-    
-    // Escuchar cambios en el buscador en tiempo real (opcional)
-    this.searchForm.valueChanges.subscribe(() => {
-      this.onSearch();
-    });
-  }
-  loadApprovedProjects() {
-    this.projectService.getApprovedProjects().subscribe(projects => {
-      this.allApprovedProjects = projects;
-      this.searchResults.set(projects); // Al inicio mostramos todo
-    });
-  }
-  onSearch() {
-    const filters = this.searchForm.value;
-    const term = filters.query?.toLowerCase() || '';
-
-    const filtered = this.allApprovedProjects.filter(proj => {
-      // 1. Filtro de Texto (Título o Autor)
-      const matchesText = proj.title?.toLowerCase().includes(term) || 
-                          proj.studentName?.toLowerCase().includes(term);
-
-      // 2. Filtro de Categoría (Carrera)
-      // Asumimos que guardaste la carrera en el user o proyecto. 
-      // Si no, tendrás que ajustar esto.
-      const matchesCategory = filters.category ? proj.category === filters.category : true;
-
-      // 3. Filtro de Año
-      let matchesYear = true;
-      if (filters.year) {
-        const date = proj.createdAt instanceof Timestamp ? proj.createdAt.toDate() : new Date(proj.createdAt);
-        matchesYear = date.getFullYear().toString() === filters.year;
-      }
-
-      return matchesText && matchesCategory && matchesYear;
-    });
-
-    this.searchResults.set(filtered);
-  }
-
-  changeView(view: DashboardView) {
-    this.currentView.set(view);
-  }
-
-  async loadInitialData() {
     this.isLoading.set(true);
+    await this.loadInitialData();
+    this.loadApprovedProjects(); 
+    this.loadDeadline(); // <--- CARGAMOS LA FECHA AQUÍ
+    
+    // Suscripción al buscador
+    this.searchForm.valueChanges.subscribe(() => { this.onSearch(); });
+
+    // Suscripción a notificaciones
+    if (this.authService.currentUser) {
+      this.notificationService.getUserNotifications(this.authService.currentUser.uid)
+      .subscribe(notifs => {
+          this.notifications.set(notifs);
+          this.unreadCount.set(notifs.filter(n => !n.isRead).length);
+      });
+    }
+  }
+
+  // --- 1. CARGA DE DATOS ---
+  async loadInitialData() {
     const user = this.authService.currentUser;
     if (user) {
       this.currentUser = await this.userService.getUserProfile(user.uid);
+      
       this.projectService.getProjectsByStudent(user.uid).subscribe(projects => {
         if (projects.length > 0) this.currentProject.set(projects[0]); 
         this.isLoading.set(false);
       });
+    } else {
+      this.isLoading.set(false);
     }
   }
+
+  loadApprovedProjects() {
+    this.projectService.getApprovedProjects().subscribe(projects => {
+      this.allApprovedProjects = projects;
+      this.searchResults.set(projects);
+    });
+  }
+
+  // --- NUEVA FUNCIÓN: CARGAR FECHA LÍMITE ---
+  async loadDeadline() {
+    try {
+      const docRef = doc(this.firestore, 'settings', 'deadlines');
+      const docSnap = await getDoc(docRef);
+
+      if (docSnap.exists()) {
+        const data = docSnap.data();
+        const myCareer = this.currentUser?.carrera || 'General';
+        
+        // Buscamos la fecha de MI carrera, si no existe usamos General
+        const careerTimestamp = data[myCareer] || data['General'];
+
+        if (careerTimestamp) {
+          this.deadlineDate.set(careerTimestamp.toDate());
+          console.log(`📅 Fecha límite cargada para ${myCareer}:`, this.deadlineDate());
+        }
+      }
+    } catch (error) {
+      console.error("Error cargando fechas límite", error);
+    }
+  }
+
+  // --- 2. BUSCADOR ---
+  onSearch(category?: string) {
+    if (category) {
+      this.selectedCategory.set(category);
+      // Si selecciona 'Todas', limpiamos el valor del form, si no, ponemos la carrera
+      this.searchForm.patchValue({ category: category === 'Todas' ? '' : category });
+    }
+  
+    const filters = this.searchForm.value;
+    const term = filters.query?.toLowerCase() || '';
+    const activeCat = this.selectedCategory();
+  
+    const filtered = this.allApprovedProjects.filter(proj => {
+      const matchesText = (proj.title?.toLowerCase().includes(term) || 
+                          proj.studentName?.toLowerCase().includes(term));
+      
+      const matchesCategory = activeCat === 'Todas' 
+        ? true 
+        : proj.category === activeCat;
+  
+      let matchesYear = true;
+      if (filters.year) {
+        const date = proj.createdAt instanceof Timestamp ? proj.createdAt.toDate() : new Date(proj.createdAt);
+        matchesYear = date.getFullYear().toString() === filters.year.toString();
+      }
+  
+      return matchesText && matchesCategory && matchesYear;
+    });
+  
+    this.searchResults.set(filtered);
+  }
+
+  // --- 3. GESTIÓN DE PROYECTO (SUBIR / EDITAR) ---
   onFileSelected(event: any) {
     const file = event.target.files[0];
     if (file) {
@@ -134,259 +208,188 @@ export class StudentDashboard {
     }
   }
 
-  // Reemplaza tu función onSubmit con esta versión optimizada
+  removeSelectedFile() {
+    this.selectedFile = null;
+    const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement;
+    if (fileInput) fileInput.value = '';
+  }
 
-async onSubmit() {
+  async onSubmit() {
     if (this.projectForm.invalid) return;
     if (!this.isEditing() && !this.selectedFile) return;
 
-    this.isLoading.set(true);
+    this.isSubmitting.set(true); 
+    
     const formData = this.projectForm.value;
 
     try {
       const user = this.authService.currentUser;
+      let projectId: string;
+      let extractedText = '';
+      let fileInfo: any = null; 
+      let isNewVersion = false;
 
-      // =================================================================================
-      // CASO A: MODO EDICIÓN
-      // =================================================================================
       if (this.isEditing()) {
-        const projectId = this.currentProject()!.id;
+        projectId = this.currentProject()!.id;
         
-        // --- A.1: Nuevo archivo subido ---
         if (this.selectedFile) {
-          this.Toast.fire({ icon: 'info', title: 'Subiendo nueva versión...' });
-
-          // 1. Extraer texto
-          const extractedText = await this.pdfUtil.extractTextFromPdf(this.selectedFile);
-
-          // 2. Subir archivo
-          const { url, path, delete_token } = await this.projectService.uploadThesisFile(this.selectedFile, projectId);
-
-          // 3. Actualizar Firestore (Ponemos estado 'pending' para que se vean los spinners)
-          const updateData = {
-              title: formData.title,
-              description: formData.description,
-              textContent: extractedText,
-              fileUrl: url,
-              filePath: path,
-              originalFileName: this.selectedFile.name,
-              status: 'subido',
-              updatedAt: Timestamp.now(),
-              virusScanStatus: 'pending', 
-              plagiarismScore: null
+          this.Toast.fire({ icon: 'info', title: 'Subiendo archivo...' });
+          
+          extractedText = await this.pdfUtil.extractTextFromPdf(this.selectedFile);
+          fileInfo = await this.projectService.uploadThesisFile(this.selectedFile, projectId);
+          
+          const previousVersions = this.currentProject()?.versions || [];
+          const newVersionEntry = {
+            url: fileInfo.url,
+            fileName: this.selectedFile.name,
+            uploadedAt: Timestamp.now(),
+            comment: 'Nueva versión subida'
           };
 
-          // --- CAMBIO CLAVE AQUÍ ---
-          // 1. Lanzamos la actualización sin 'await' para no bloquear la pantalla
-          this.projectService.updateProject(projectId, updateData);
-
-          // 2. Cerramos el formulario INMEDIATAMENTE
-          this.isEditing.set(false);
-          this.projectForm.reset();
-          this.selectedFile = null;
-          this.isLoading.set(false); 
-
-          // 3. Mostramos mensaje y seguimos con seguridad en segundo plano
-          this.Toast.fire({ icon: 'success', title: 'Nueva versión subida' });
-
-          // El chequeo de seguridad sigue aquí abajo...
-          const result = await this.projectService.runAutomatedSecurityCheck(
-              projectId, url, formData.title, formData.description, extractedText, delete_token
-          );
-
-          // Manejamos el resultado silenciosamente o con alerta final
-          if (result === 'plagiarism_rejected') {
-             Swal.fire({ title: 'ALERTA', text: 'El documento fue rechazado por plagio tras el análisis.', icon: 'error' });
-          } else if (result === 'infected') {
-             Swal.fire({ title: 'ALERTA', text: 'Se detectó un virus. El documento ha sido marcado.', icon: 'warning' });
-          } else {
-             this.Toast.fire({ icon: 'success', title: 'Análisis completado: Documento limpio.' });
-          }
-
-        } 
-        // --- A.2: Solo edición de texto ---
-        else {
-          const updateData = {
+          await this.projectService.updateProject(projectId, {
+            title: formData.title,
+            description: formData.description,
+            textContent: extractedText,
+            fileUrl: fileInfo.url,
+            filePath: fileInfo.path,
+            originalFileName: this.selectedFile.name,
+            status: 'subido',
+            updatedAt: Timestamp.now(),
+            virusScanStatus: 'pending', 
+            plagiarismScore: null,
+            versions: [...previousVersions, newVersionEntry]
+          });
+          isNewVersion = true;
+        } else {
+          await this.projectService.updateProject(projectId, {
             title: formData.title,
             description: formData.description,
             updatedAt: Timestamp.now()
-          };
-          await this.projectService.updateProject(projectId, updateData);
-          this.Toast.fire({ icon: 'success', title: 'Información actualizada' });
-          this.finalizeAction();
+          });
+          this.Toast.fire({ icon: 'success', title: 'Datos actualizados' });
         }
-      } 
-      
-      // =================================================================================
-      // CASO B: MODO CREACIÓN (Nuevo Proyecto)
-      // =================================================================================
-      else {
+
+      } else {
+        // CREACIÓN
         this.Toast.fire({ icon: 'info', title: 'Creando proyecto...' });
-        const extractedText = await this.pdfUtil.extractTextFromPdf(this.selectedFile!);
+        
+        extractedText = await this.pdfUtil.extractTextFromPdf(this.selectedFile!);
         
         const newProject: any = {
           studentId: user?.uid,
           studentName: this.currentUser?.nombre,
+          // Guardamos la carrera correcta para el evaluador
+          category: this.currentUser?.carrera || 'Ingeniería de Sistemas', 
           title: formData.title,
           description: formData.description,
           textContent: extractedText,
           status: 'subido',
           createdAt: Timestamp.now(),
           updatedAt: Timestamp.now(),
-          virusScanStatus: 'pending' // Importante inicializar así
+          virusScanStatus: 'pending',
+          versions: []
         };
 
-        const projectId = await this.projectService.createProject(newProject);
-        const { url, path, delete_token } = await this.projectService.uploadThesisFile(this.selectedFile!, projectId);
-        await this.projectService.updateProjectFileUrl(projectId, url, path, this.selectedFile!.name);
+        projectId = await this.projectService.createProject(newProject);
+        fileInfo = await this.projectService.uploadThesisFile(this.selectedFile!, projectId);
+        
+        const firstVersion = {
+           url: fileInfo.url,
+           fileName: this.selectedFile!.name,
+           uploadedAt: Timestamp.now(),
+           comment: 'Versión inicial'
+        };
 
-        // Cerramos formulario inmediatamente
-        this.isLoading.set(false);
-        this.projectForm.reset();
-        this.selectedFile = null;
+        await this.projectService.updateProject(projectId, {
+           fileUrl: fileInfo.url, 
+           filePath: fileInfo.path, 
+           originalFileName: this.selectedFile!.name,
+           versions: [firstVersion]
+        });
+        isNewVersion = true;
+      }
 
-        // Avisamos que empieza el análisis
-        this.Toast.fire({ icon: 'info', title: 'Proyecto creado. Iniciando análisis...' });
+      this.finalizeAction(); 
 
-        // Seguridad en segundo plano
-        await this.projectService.runAutomatedSecurityCheck(
-            projectId, url, formData.title, formData.description, extractedText, delete_token 
-        ); 
+      // SEGUNDO PLANO: SEGURIDAD
+      if (isNewVersion && fileInfo) {
+        this.projectService.runAutomatedSecurityCheck(
+          projectId, 
+          fileInfo.url, 
+          formData.title, 
+          formData.description, 
+          extractedText, 
+          fileInfo.delete_token
+        ).then(async (result) => {
+            if (result.status === 'plagiarism_rejected') {
+               await Swal.fire({
+                   title: 'PROYECTO ELIMINADO',
+                   html: `<div style="text-align: center;"><p>Nivel crítico de similitud:</p><h1 style="color: #ea580c; font-size: 3rem;">${result.score}%</h1></div>`,
+                   icon: 'error',
+                   allowOutsideClick: false
+               });
+               this.currentProject.set(null);
+            }
+            else if (result.status === 'infected') {
+               await Swal.fire('AMENAZA DETECTADA', 'El archivo tiene virus.', 'error');
+            }
+            else if (result.status === 'clean') {
+               const docRef = doc(this.firestore, 'projects', projectId);
+               const docSnap = await getDoc(docRef);
+               if (docSnap.exists()) {
+                  this.currentProject.set({ id: projectId, ...docSnap.data() } as any);
+                  this.Toast.fire({ icon: 'success', title: 'Análisis finalizado' });
+               }
+            }
+        });
       }
 
     } catch (error: any) {
       console.error(error);
       this.Toast.fire({ icon: 'error', title: 'Error: ' + error.message });
-      this.isLoading.set(false);
+      this.isSubmitting.set(false);
     }
-}
-  handleSecurityResult(result: string) {
-    if (result === 'plagiarism_rejected') {
-      Swal.fire({
-        title: 'PROYECTO RECHAZADO',
-        text: 'Se ha detectado un nivel de similitud superior al 50%. El archivo ha sido eliminado.',
-        icon: 'error',
-        confirmButtonColor: '#d33'
-      }).then(() => {
-         // Si se rechaza, limpiamos la selección actual
-         this.currentProject.set(null); 
-      });
-      this.finalizeAction(); // Limpia formulario
+  }
 
-    } else if (result === 'infected') {
-      Swal.fire('Atención', 'Se detectó una amenaza en el archivo. El proyecto ha sido observado.', 'warning');
-      this.finalizeAction();
-
-    } else {
-      const msg = this.isEditing() ? '¡Proyecto actualizado correctamente!' : '¡Proyecto aceptado y enviado a revisión!';
-      this.Toast.fire({ icon: 'success', title: msg });
-      this.finalizeAction();
-    }
-}
-finalizeAction() {
+  // --- UTILIDADES ---
+  finalizeAction() {
+    this.isEditing.set(false);
+    setTimeout(() => this.isSubmitting.set(false), 500);
     this.projectForm.reset();
     this.selectedFile = null;
-    this.isEditing.set(false); // Salimos del modo edición
-    this.isLoading.set(false);
-}
-  // Agrega esta función en tu clase DashboardComponent
-removeSelectedFile() {
-  this.selectedFile = null; // Borramos la variable que guarda el archivo
-  
-  // Opcional: Resetear el input del formulario si lo usas
-  // this.projectForm.get('file')?.setValue(null); 
-  
-  // IMPORTANTE: Si necesitas limpiar el input file nativo para que el evento (change)
-  // se dispare de nuevo aunque seleccionen el mismo archivo, puedes hacerlo así:
-  const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement;
-  if (fileInput) {
-    fileInput.value = '';
-  }
-}
-startEditing() {
-  const project = this.currentProject();
-  if (!project) return;
-
-  this.isEditing.set(true);
-  
-  // Rellenamos el formulario con los datos actuales
-  this.projectForm.patchValue({
-    title: project.title,
-    description: project.description
-  });
-  
-  // OJO: No seteamos el archivo porque ese es un input type="file"
-  // Pero guardamos la referencia de que ya existe un archivo
-}
-cancelEditing() {
-  this.isEditing.set(false);
-  this.projectForm.reset();
-  this.selectedFile = null;
-}
-  onLogout() {
-    this.authService.logout();
   }
 
-  toggleSidebar() {
-    this.isSidebarOpen.update(v => !v);
+  startEditing() {
+    const project = this.currentProject();
+    if (!project) return;
+    this.isSubmitting.set(false);
+    this.isEditing.set(true);
+    this.projectForm.patchValue({
+      title: project.title,
+      description: project.description
+    });
   }
-  closeSidebar() {
-    this.isSidebarOpen.set(false);
+
+  cancelEditing() {
+    this.isEditing.set(false);
+    this.projectForm.reset();
+    this.selectedFile = null;
+    this.isSubmitting.set(false);
   }
 
+  // --- NOTIFICACIONES Y PERFIL ---
+  toggleNotifications() {
+    this.showNotifications.update(v => !v);
+  }
 
-  /*async onSubmit() {
-    if (this.projectForm.invalid || !this.selectedFile) {
-      this.Toast.fire({ icon: 'warning', title: 'Completa el formulario y selecciona un archivo' });
-      return;
-    }
-
-    this.isLoading.set(true);
-    
-    try {
-      const user = this.authService.currentUser;
-      if (!user) throw new Error('No hay sesión');
-
-      // 1. Crear registro base
-      const newProject: any = {
-        studentId: user.uid,
-        studentName: this.currentUser?.nombre || 'Estudiante',
-        title: this.projectForm.value.title,
-        description: this.projectForm.value.description,
-        status: 'borrador', // Inicia como borrador hasta que suba el archivo
-        createdAt: Timestamp.now(),
-        updatedAt: Timestamp.now()
-      };
-
-      const projectId = await this.projectService.createProject(newProject);
-
-      // 2. Subir Archivo
-      const { url, path } = await this.projectService.uploadThesisFile(this.selectedFile, projectId);
-
-      // 3. Actualizar proyecto
-      await this.projectService.updateProjectFileUrl(projectId, url, path, this.selectedFile.name);
-
-      this.Toast.fire({ icon: 'success', title: '¡Proyecto enviado a revisión!' });
-      this.projectForm.reset();
-      this.selectedFile = null;
-
-      console.log('Iniciando escaneo para ID:', projectId); // <--- Agrega esto para depurar
-      await this.projectService.runAutomatedSecurityCheck(
-          projectId, 
-          url, 
-          this.projectForm.value.title, 
-          this.projectForm.value.description
-      );
-      //await this.projectService.runAutomatedSecurityCheck(projectId, url);
-
-    } catch (error: any) {
-      console.error(error);
-      this.Toast.fire({ icon: 'error', title: 'Error al subir proyecto: ' + error.message });
-    } finally {
-      this.isLoading.set(false);
+  markRead(n: any) {
+    if (!n.isRead) {
+        this.notificationService.markAsRead(n.id);
     }
   }
-  onLogout() {
-    this.authService.logout();
-  }*/
+
+  changeView(view: DashboardView) { this.currentView.set(view); }
+  onLogout() { this.authService.logout(); }
+  toggleSidebar() { this.isSidebarOpen.update(v => !v); }
+  closeSidebar() { this.isSidebarOpen.set(false); }
 }
